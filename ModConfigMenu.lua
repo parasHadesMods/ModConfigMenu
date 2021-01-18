@@ -41,9 +41,25 @@ local function ShowCurrentMenu( screen )
   local itemSpacingY = 50
   local itemsPerRow = 3
   
-  local components = screen.Components
+  local parentComponents = screen.Components
+
+  -- clear previous menu
+  local ids = {}
+  for name, component in pairs(screen.MenuComponents) do
+    parentComponents[k] = nil
+    table.insert(ids, component.Id)
+  end
+  CloseScreen( ids )
+  screen.MenuComponents = {}
+  local components = screen.MenuComponents
 
   local currentMenu = ModConfigMenu.Menus[ModConfigMenu.CurrentMenuIdx]
+
+  ModifyTextBox({
+    Id = parentComponents["SelectedMenu"].Id,
+    Text = currentMenu.ModName or "Unknown Mod"
+  })
+
   local itemsInRow = 0
   for name, value in orderedPairs( currentMenu ) do
     if value == true or value == false then
@@ -91,6 +107,26 @@ local function ShowCurrentMenu( screen )
       itemLocationX = previousItemLocationX + columnSpacingX
     end
   end
+
+  for k, v in pairs(components) do
+    parentComponents[k] = v
+  end
+end
+
+function ModConfigMenu__MenuLeft( screen, button )
+  ModConfigMenu.CurrentMenuIdx = ModConfigMenu.CurrentMenuIdx - 1
+  if ModConfigMenu.CurrentMenuIdx < 1 then
+    ModConfigMenu.CurrentMenuIdx = #ModConfigMenu.Menus
+  end
+  ShowCurrentMenu( screen )
+end
+
+function ModConfigMenu__MenuRight( screen, button )
+  ModConfigMenu.CurrentMenuIdx = ModConfigMenu.CurrentMenuIdx + 1
+  if ModConfigMenu.CurrentMenuIdx > #ModConfigMenu.Menus then
+    ModConfigMenu.CurrentMenuIdx = 1
+  end
+  ShowCurrentMenu( screen )
 end
 
 function ModConfigMenu__ToggleBoolean(screen, button)
@@ -108,6 +144,7 @@ function ModConfigMenu__Open()
   local components = {}
   local screen = {
     Components = components,
+    MenuComponents = {},
     CloseAnimation  = "QuestLogBackground_Out"
   }
   OnScreenOpened({ Flag = screen.Name, PersistCombatUI = true})
@@ -138,7 +175,47 @@ function ModConfigMenu__Open()
   components.CloseButton = CreateScreenComponent({ Name = "ButtonClose", Scale = 0.7, Group = "Combat_Menu"})
   Attach({ Id = components.CloseButton.Id, DestinationId = components.ShopBackground.Id, OffsetX = -6, OffsetY = 456 })
   components.CloseButton.OnPressedFunctionName = "ModConfigMenu__Close"
-  components.CloseButton.ContgrolHotkey = "Cancel"
+  components.CloseButton.ControlHotkey = "Cancel"
+
+  components["MenuLeft"] = CreateScreenComponent({
+    Name = "ButtonCodexLeft",
+    X = 650,
+    Y = 175,
+    Scale = 1.0,
+    Group = "Combat_Menu"
+  })
+
+  components["MenuLeft"].OnPressedFunctionName = "ModConfigMenu__MenuLeft"
+
+  components["MenuRight"] = CreateScreenComponent({
+    Name = "ButtonCodexRight",
+    X = 1300,
+    Y = 175,
+    Scale = 1.0,
+    Group = "Combat_Menu"
+  })
+
+  components["MenuRight"].OnPressedFunctionName = "ModConfigMenu__MenuRight"
+
+  components["SelectedMenu"] = CreateScreenComponent({
+    Name = "BlankObstacle",
+    X = 975,
+    Y = 175,
+    Scale = 0.5,
+    Group = "Combat_Menu"
+  })
+
+  components["MenuRight"].OnPressedFunctionName = "ModConfigMenu__MenuRight"
+
+  CreateTextBox({
+    Id = components["SelectedMenu"].Id,
+    Text = "",
+    OffsetX = 0, OffsetY = 0, 
+    Color = Color.White,
+    Font = "AlegreyaSansSCRegular",
+    ShadowBlur = 0, ShadowColor = { 0, 0, 0, 1 }, ShadowOffset = { 0, 2 },
+    Justification = "Center"
+  })
 
   ShowCurrentMenu( screen )
   screen.KeepOpen = true
@@ -160,31 +237,23 @@ function ModConfigMenu__Close( screen, button )
 end
 
 local config = {
-  BakeACake = true,
-  TakeNotes = false,
-  ReadABook = true,
-  EnableFrenchCuisine = true,
-  EnableFrenchLiterature = false,
-  HideNotesInsideCake = true,
-  HadeCakeInsideBook = false,
-  FlipControlsHorizontally = false,
-  FlipControlsVertically = false,
-  MakeACoffee = true,
-  MakeTwoCoffees = false,
-  MakeACoffeeIfBakingACake = false,
-  TurnTheRecordOver = true,
+  ModName = "Meat Loaf",
   WantYou = true,
   NeedYou = true,
   LoveYou = false,
   BeSad = false,
-  TwoOutOfThreeIsBad = false,
-  WashTheDishes = false,
-  WashTheCar = false,
-  StreamOnTwitch = true,
-  TwitchOnStream = false
+  TwoOutOfThreeIsBad = false
 }
 
 ModConfigMenu.Register(config)
+
+local config2 = {
+  ModName = "Traditional",
+  KnewYouWereComing = false,
+  BakedACake = false
+}
+
+ModConfigMenu.Register(config2)
 
 ModUtil.WrapBaseFunction("CreatePrimaryBacking", function ( baseFunc )
   local components = ScreenAnchors.TraitTrayScreen.Components
