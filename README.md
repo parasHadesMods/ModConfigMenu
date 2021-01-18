@@ -19,3 +19,5 @@ To use, add config like the following to your mod:
       YourSecondSetting = false 
     }
     ModConfigMenu.Register(config)
+
+Check out the demo at https://youtu.be/pV1bP38hNxQ
