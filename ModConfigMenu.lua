@@ -243,7 +243,12 @@ end
 ModUtil.WrapBaseFunction("CreatePrimaryBacking", function ( baseFunc )
   local components = ScreenAnchors.TraitTrayScreen.Components
 
-  components.ModConfigButton = CreateScreenComponent({ Name = "ButtonDefault", Scale = 1.0, Group = "Combat_Menu_TraitTray", X = CombatUI.TraitUIStart + 105, Y = 930 })
+  components.ModConfigButton = CreateScreenComponent({
+    Name = "ButtonDefault",
+    Scale = 0.8,
+    Group = "Combat_Menu_TraitTray",
+    X = CombatUI.TraitUIStart + 135,
+    Y = 185 })
   components.ModConfigButton.OnPressedFunctionName = "ModConfigMenu__Open"
   CreateTextBox({ Id = components.ModConfigButton.Id,
       Text = "Configure Mods",
