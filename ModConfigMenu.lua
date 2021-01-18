@@ -20,22 +20,25 @@ local function PrettifyName( name )
   return prettyName
 end
 
-local function CheckBoxText( value )
+local function UpdateCheckBox( button, value )
+  local radioButtonValue = "RadioButton_Unselected"
   if value then
-    return "{!Icons.CheckboxFilled}"
-  else
-    return "{!Icons.CheckboxEmpty}"
+    radioButtonValue = "RadioButton_Selected"
   end
+  SetThingProperty({
+    DestinationId = button.Id,
+    Property = "Graphic",
+    Value = radioButtonValue
+  })
 end
 
 local function ShowCurrentMenu( screen )
-  local itemLocationX = 1400
-  local itemLocationY = 560
-  local itemSpacingX = 100
+  local itemLocationX = 250
+  local itemLocationY = 250
+  local itemSpacingX = 250
   local itemSpacingY = 50
   
-  screen.MenuComponents = {}
-  local components = screen.MenuComponents
+  local components = screen.Components
 
   local currentMenu = ModConfigMenu.Menus[ModConfigMenu.CurrentMenuIdx]
   for name, value in pairs( currentMenu ) do
@@ -49,30 +52,30 @@ local function ShowCurrentMenu( screen )
       CreateTextBox({ 
         Id = components[name .. "TextBox"].Id,
         Text = PrettifyName(name),
-        Color = { 245, 200, 47, 255 },
-        FontSize = 48,
+        Color = Color.BoonPatchCommon,
+        FontSize = 16,
         OffsetX = 0, OffsetY = 0,
-        Font = "AlegrayaSansSCBold",
+        Font = "AlegrayaSansSCRegular",
+        ShadowBlur = 0, ShadowColor = { 0, 0, 0, 1 }, ShadowOffset = { 0,  2 },
         Justification = "Center"
       })
       local previousItemLocationX = itemLocationX
       itemLocationX = itemLocationX + itemSpacingX
       components[name .. "CheckBox"] = CreateScreenComponent({
-        Name = "ButtonDefault",
+        Name = "RadioButton",
         Scale = 1,
         X = itemLocationX,
         Y = itemLocationY, 
         Group = "CombatMenu"
       })
+      UpdateCheckBox(components[name .. "CheckBox"], value)
       components[name .. "CheckBox"].MenuItemName = name
       components[name .. "CheckBox"].OnPressedFunctionName = "ModConfigMenu__ToggleBoolean"
       CreateTextBox({ 
         Id = components[name .. "CheckBox"].Id,
-        Text = CheckBoxText(value),
-        Color = { 245, 200, 47, 255 },
-        FontSize = 48,
+        FontSize = 16,
         OffsetX = 0, OffsetY = 0,
-        Font = "AlegrayaSansSCBold",
+        Font = "AlegrayaSansSCRegular",
         Justification = "Center"
       })
       itemLocationX = previousItemLocationX
@@ -81,26 +84,28 @@ local function ShowCurrentMenu( screen )
   end
 end
 
-local function CloseCurrentMenu()
-  CloseScreen( GetAllIds( screen.MenuComponents ), 0.1)
-end
-
 function ModConfigMenu__ToggleBoolean(screen, button)
-  local name = button.MenuItemName
   local menu = ModConfigMenu.Menus[ModConfigMenu.CurrentMenuIdx]
+  local name = button.MenuItemName
   menu[name] = not menu[name]
-  ModifyTextBox({ Id = button.Id, Text = CheckBoxText(menu[name]) })
+  UpdateCheckBox(button, menu[name])
 end
 
 function ModConfigMenu__Open()
+  -- TODO: find a better place to put the button, so
+  -- we don't conflict with the seed selector mod
+  CloseAdvancedTooltipScreen()
+
   local components = {}
   local screen = {
     Components = components,
     CloseAnimation  = "QuestLogBackground_Out"
   }
-  -- OnScreenOpened({ Flag = screen.Name, PersistCombatUI = true})
+  OnScreenOpened({ Flag = screen.Name, PersistCombatUI = true})
   FreezePlayerUnit()
   EnableShopGamepadCursor()
+  SetConfigOption({ Name = "FreeFormSelectWrapY", Value = false })
+  SetConfigOption({ Name = "FreeFormSelectStepDistance", Value = 8 })
 
   components.ShopBackgroundDim = CreateScreenComponent({ Name = "rectangle01", Group = "Combat_Menu"})
   components.ShopBackgroundSplatter = CreateScreenComponent({ Name = "LevelUpBackground", Group = "Combat_Menu"})
@@ -116,7 +121,7 @@ function ModConfigMenu__Open()
   wait(0.2)
 
   -- Title
-  CreateTextBox({ Id = components.ShopBackground.Id, Text = "Configure your mods.", FontSize = 34, OffsetX = 0, OffsetY = -460,
+  CreateTextBox({ Id = components.ShopBackground.Id, Text = "Configure your Mods", FontSize = 34, OffsetX = 0, OffsetY = -460,
     Color = Color.White, Font = "SpectralSCLightTitling", ShadowBlur = 0, ShadowColor = { 0, 0, 0, 1 }, ShadowOffset = { 0, 2 },
     Justification = "Center" })
 
@@ -127,17 +132,22 @@ function ModConfigMenu__Open()
   components.CloseButton.ContgrolHotkey = "Cancel"
 
   ShowCurrentMenu( screen )
+  screen.KeepOpen = true
+  thread( HandleWASDInput, screen )
+  HandleScreenInput( screen )
 end
 
-function ModConfigMenu__Close()
+function ModConfigMenu__Close( screen, button )
   DisableShopGamepadCursor()
-  SetAnimation({ DestinationId = screen.Components.Shopbackground.Id, Name = screen.CloseAnimation })
+  SetConfigOption({ Name = "FreeFormSelectWrapY", Value = false })
+  SetConfigOption({ Name = "FreeFormSelectStepDistance", Value = 16 })
+  SetConfigOption({ Name = "FreeFormSelectSuccessDistanceStep", Value = 8})
+  SetAnimation({ DestinationId = screen.Components.ShopBackground.Id, Name = screen.CloseAnimation })
   PlaySound({ Name = "/SFX/Menu Sounds/FatedListClose" })
-  CloseCurrentMenu()
   CloseScreen( GetAllIds( screen.Components ), 0.1)
   UnfreezePlayerUnit()
-  -- screen.KeepOpen = false
-  -- OnScreenClosed({ Flag = screen.Name })
+  screen.KeepOpen = false
+  OnScreenClosed({ Flag = screen.Name })
 end
 
 local config = {
@@ -146,3 +156,26 @@ local config = {
 }
 
 ModConfigMenu.Register(config)
+
+ModUtil.WrapBaseFunction("CreatePrimaryBacking", function ( baseFunc )
+  local components = ScreenAnchors.TraitTrayScreen.Components
+
+  components.ModConfigButton = CreateScreenComponent({ Name = "ButtonDefault", Scale = 1.0, Group = "Combat_Menu_TraitTray", X = CombatUI.TraitUIStart + 105, Y = 930 })
+  components.ModConfigButton.OnPressedFunctionName = "ModConfigMenu__Open"
+  CreateTextBox({ Id = components.ModConfigButton.Id,
+      Text = "Configure Mods",
+      OffsetX = 0, OffsetY = 0,
+      FontSize = 22,
+      Color = Color.White,
+      Font = "AlegreyaSansSCRegular",
+      ShadowBlur = 0, ShadowColor = {0,0,0,1}, ShadowOffset={0, 2},
+      Justification = "Center",
+      DataProperties =
+      {
+        OpacityWithOwner = true,
+      },
+    })
+  Attach({ Id = components.ModConfigButton.Id, DestinationId = components.ModConfigButton, OffsetX = 500, OffsetY = 500 })
+  baseFunc()
+end, ModConfigMenu)
+
