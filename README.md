@@ -1,0 +1,21 @@
+Mod Config Menu
+---------------
+
+Utility mod that exposes the configuration of your
+other Hades mods via an in-game UI, so you can change
+them on the fly.
+
+Features:
+ - UI for toggling boolean values
+ - Minimal setup
+
+Does not (yet) persist settings between Hades sessions.
+
+To use, add config like the following to your mod:
+
+    local config = {
+      ModName = "Your Mod's name",
+      YourFirstSetting = true,
+      YourSecondSetting = false 
+    }
+    ModConfigMenu.Register(config)
