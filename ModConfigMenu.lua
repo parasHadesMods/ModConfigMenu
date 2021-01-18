@@ -33,16 +33,26 @@ local function UpdateCheckBox( button, value )
 end
 
 local function ShowCurrentMenu( screen )
-  local itemLocationX = 250
+  local rowStartX = 350
+  local columnSpacingX = 600
+  local itemLocationX = rowStartX
   local itemLocationY = 250
   local itemSpacingX = 250
   local itemSpacingY = 50
+  local itemsPerRow = 3
   
   local components = screen.Components
 
   local currentMenu = ModConfigMenu.Menus[ModConfigMenu.CurrentMenuIdx]
-  for name, value in pairs( currentMenu ) do
+  local itemsInRow = 0
+  for name, value in orderedPairs( currentMenu ) do
     if value == true or value == false then
+      itemsInRow = itemsInRow + 1
+      if itemsInRow > itemsPerRow then
+        itemLocationX = rowStartX
+        itemLocationY = itemLocationY + itemSpacingY
+        itemsInRow = itemsInRow - itemsPerRow
+      end
       components[name .. "TextBox"] = CreateScreenComponent({ 
         Name = "BlankObstacle", 
         Scale = 1,
@@ -78,8 +88,7 @@ local function ShowCurrentMenu( screen )
         Font = "AlegrayaSansSCRegular",
         Justification = "Center"
       })
-      itemLocationX = previousItemLocationX
-      itemLocationY = itemLocationY + itemSpacingY
+      itemLocationX = previousItemLocationX + columnSpacingX
     end
   end
 end
@@ -152,7 +161,27 @@ end
 
 local config = {
   BakeACake = true,
-  WashTheDishes = false
+  TakeNotes = false,
+  ReadABook = true,
+  EnableFrenchCuisine = true,
+  EnableFrenchLiterature = false,
+  HideNotesInsideCake = true,
+  HadeCakeInsideBook = false,
+  FlipControlsHorizontally = false,
+  FlipControlsVertically = false,
+  MakeACoffee = true,
+  MakeTwoCoffees = false,
+  MakeACoffeeIfBakingACake = false,
+  TurnTheRecordOver = true,
+  WantYou = true,
+  NeedYou = true,
+  LoveYou = false,
+  BeSad = false,
+  TwoOutOfThreeIsBad = false,
+  WashTheDishes = false,
+  WashTheCar = false,
+  StreamOnTwitch = true,
+  TwitchOnStream = false
 }
 
 ModConfigMenu.Register(config)
