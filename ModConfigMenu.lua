@@ -25,6 +25,7 @@ local function CheckBoxText( value )
     return "{!Icons.CheckboxFilled}"
   else
     return "{!Icons.CheckboxEmpty}"
+  end
 end
 
 local function ShowCurrentMenu( screen )
