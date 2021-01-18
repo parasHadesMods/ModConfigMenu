@@ -55,6 +55,10 @@ local function ShowCurrentMenu( screen )
 
   local currentMenu = ModConfigMenu.Menus[ModConfigMenu.CurrentMenuIdx]
 
+  if not currentMenu then
+    return
+  end
+
   ModifyTextBox({
     Id = parentComponents["SelectedMenu"].Id,
     Text = currentMenu.ModName or "Unknown Mod"
@@ -209,7 +213,7 @@ function ModConfigMenu__Open()
 
   CreateTextBox({
     Id = components["SelectedMenu"].Id,
-    Text = "",
+    Text = "No Mods To Configure",
     OffsetX = 0, OffsetY = 0, 
     Color = Color.White,
     Font = "AlegreyaSansSCRegular",
@@ -235,25 +239,6 @@ function ModConfigMenu__Close( screen, button )
   screen.KeepOpen = false
   OnScreenClosed({ Flag = screen.Name })
 end
-
-local config = {
-  ModName = "Meat Loaf",
-  WantYou = true,
-  NeedYou = true,
-  LoveYou = false,
-  BeSad = false,
-  TwoOutOfThreeIsBad = false
-}
-
-ModConfigMenu.Register(config)
-
-local config2 = {
-  ModName = "Traditional",
-  KnewYouWereComing = false,
-  BakedACake = false
-}
-
-ModConfigMenu.Register(config2)
 
 ModUtil.WrapBaseFunction("CreatePrimaryBacking", function ( baseFunc )
   local components = ScreenAnchors.TraitTrayScreen.Components
