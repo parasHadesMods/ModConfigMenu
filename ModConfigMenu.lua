@@ -46,7 +46,7 @@ local function ShowCurrentMenu( screen )
   -- clear previous menu
   local ids = {}
   for name, component in pairs(screen.MenuComponents) do
-    parentComponents[k] = nil
+    parentComponents[name] = nil
     table.insert(ids, component.Id)
   end
   CloseScreen( ids )
