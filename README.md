@@ -9,7 +9,9 @@ Features:
  - UI for toggling boolean values
  - Minimal setup
 
-Does not (yet) persist settings between Hades sessions.
+Settings are saved in your save file, so they're only
+saved when the game is saved. If you change a setting
+during a run, it will be forgotten if you "Give Up".
 
 To use, add config like the following to your mod:
 

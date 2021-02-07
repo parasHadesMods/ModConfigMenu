@@ -7,6 +7,30 @@ function ModConfigMenu.Register(config)
   table.insert(ModConfigMenu.Menus, config)
 end
 
+ModUtil.LoadOnce(function()
+  -- this table is intentionally not excluded from saves, so
+  -- that mod config settings can be persisted in the save file
+  if not ModConfigMenuSavedSettings then
+    ModConfigMenuSavedSettings = {
+      Version = "1.0",
+      Menus = {}
+    }
+  end
+  if ModConfigMenuSavedSettings.Version == "1.0" then
+    for i, config in pairs(ModConfigMenu.Menus) do
+      local savedMenu = ModConfigMenuSavedSettings[config.ModName]
+      if savedMenu then
+        for k,v in pairs(savedMenu) do
+          if config[k] ~= nil then
+            config[k] = v
+          end
+        end
+      end
+      ModConfigMenuSavedSettings[config.ModName] = config
+    end
+  end
+end)
+
 local function PrettifyName( name )
   local first = true
   local prettyName = name:gsub("%u", function(c)
