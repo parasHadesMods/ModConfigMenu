@@ -90,7 +90,8 @@ local function ShowCurrentMenu( screen )
 
   local itemsInRow = 0
   for name, value in orderedPairs( currentMenu ) do
-    if value == true or value == false then
+    local previousItemLocationX = itemLocationX
+    if value == true or value == false or type(value) == "number" then
       itemsInRow = itemsInRow + 1
       if itemsInRow > itemsPerRow then
         itemLocationX = rowStartX
@@ -113,20 +114,48 @@ local function ShowCurrentMenu( screen )
         ShadowBlur = 0, ShadowColor = { 0, 0, 0, 1 }, ShadowOffset = { 0,  2 },
         Justification = "Center"
       })
-      local previousItemLocationX = itemLocationX
       itemLocationX = itemLocationX + itemSpacingX
+    end
+    if value == true or value == false then
       components[name .. "CheckBox"] = CreateScreenComponent({
         Name = "RadioButton",
         Scale = 1,
         X = itemLocationX,
-        Y = itemLocationY, 
+        Y = itemLocationY,
         Group = "CombatMenu"
       })
       UpdateCheckBox(components[name .. "CheckBox"], value)
       components[name .. "CheckBox"].MenuItemName = name
       components[name .. "CheckBox"].OnPressedFunctionName = "ModConfigMenu__ToggleBoolean"
+      itemLocationX = previousItemLocationX + columnSpacingX
+    elseif type(value) == "number" then
+      components[name .. "ButtonPlus"] = CreateScreenComponent({
+        Name = "LevelUpArrowRight",
+        Scale = 1,
+        X = itemLocationX - 40,
+        Y = itemLocationY,
+        Group = "CombatMenu"
+      })
+      components[name .. "ButtonPlus"].MenuItemName = name
+      components[name .. "ButtonPlus"].OnPressedFunctionName = "ModConfigMenu__ButtonPlus"
+      components[name .. "ButtonMinus"] = CreateScreenComponent({
+        Name = "LevelUpArrowLeft",
+        Scale = 1,
+        X = itemLocationX,
+        Y = itemLocationY,
+        Group = "CombatMenu"
+      })
+      components[name .. "ButtonMinus"].MenuItemName = name
+      components[name .. "ButtonMinus"].OnPressedFunctionName = "ModConfigMenu__ButtonMinus"
+      components[name .. "NumberText"] = CreateScreenComponent({
+        Name = "BlankObstacle",
+        Scale = 1,
+        X = itemLocationX + 40,
+        Y = itemLocationY,
+        Group = "Combat_Menu" })
       CreateTextBox({ 
-        Id = components[name .. "CheckBox"].Id,
+        Id = components[name .. "NumberText"].Id,
+        Text = tostring(value),
         FontSize = 16,
         OffsetX = 0, OffsetY = 0,
         Font = "AlegrayaSansSCRegular",
@@ -164,9 +193,22 @@ function ModConfigMenu__ToggleBoolean(screen, button)
   UpdateCheckBox(button, menu[name])
 end
 
+function ModConfigMenu__ButtonPlus(screen, button)
+  local menu = ModConfigMenu.Menus[ModConfigMenu.CurrentMenuIdx]
+  local name = button.MenuItemName
+  print(name, menu[name])
+  menu[name] = menu[name] + 1
+  ModifyTextBox({ Id = screen.Components[name .. "NumberText"].Id, Text = tostring(menu[name]) })
+end
+
+function ModConfigMenu__ButtonMinus(screen, button)
+  local menu = ModConfigMenu.Menus[ModConfigMenu.CurrentMenuIdx]
+  local name = button.MenuItemName
+  menu[name] = menu[name] - 1
+  ModifyTextBox({ Id = screen.Components[name .. "NumberText"].Id, Text = tostring(menu[name]) })
+end
+
 function ModConfigMenu__Open()
-  -- TODO: find a better place to put the button, so
-  -- we don't conflict with the seed selector mod
   CloseAdvancedTooltipScreen()
 
   local components = {}
