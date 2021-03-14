@@ -95,6 +95,7 @@ local function ShowCurrentMenu( screen )
       itemsInRow = itemsInRow + 1
       if itemsInRow > itemsPerRow then
         itemLocationX = rowStartX
+        previousItemLocationX = itemLocationX
         itemLocationY = itemLocationY + itemSpacingY
         itemsInRow = itemsInRow - itemsPerRow
       end
